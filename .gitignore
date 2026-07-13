@@ -1,0 +1,6 @@
+venv/
+
+.env
+
+ingestion/__pycache__
+ingestion/detection/__pycache__
