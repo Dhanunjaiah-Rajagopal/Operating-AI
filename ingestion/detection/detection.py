@@ -4,7 +4,12 @@ from ingestion.detection.components import ExtensionValidator, HashGenerator, Me
 from ingestion.detection.pipeline import FilePipeline
 
 from pathlib import Path
+import logging
 
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s | %(levelname)s | %(name)s | %(message)s",
+)
 
 pipeline = FilePipeline(
     metadata_extractor=MetadataExtractor(),
