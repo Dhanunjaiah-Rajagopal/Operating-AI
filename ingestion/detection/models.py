@@ -30,3 +30,13 @@ class FileProfile:
     mime_type: MimeType
     file_hash: FileHash
     validation_status: ValidationStatus
+
+class FileProcessingError(Exception):
+    def __init__(self, message: str, original_error: BaseException):
+        super().__init__(message)
+        self.original_error = original_error
+
+@dataclass(frozen=True)
+class ProcessingResult:
+    file_profile: FileProfile | None
+    error: FileProcessingError | None
