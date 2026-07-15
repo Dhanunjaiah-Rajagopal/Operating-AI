@@ -1,5 +1,6 @@
 import logging
 from pathlib import Path
+from typing import Iterable
 
 from ingestion.detection.components import (
     ExtensionValidator,
@@ -8,6 +9,7 @@ from ingestion.detection.components import (
     MimeDetector,
 )
 from ingestion.detection.models import (
+    BatchProcessingResult,
     FileProcessingError,
     FileProfile,
     ProcessingResult,
@@ -70,3 +72,27 @@ class FilePipeline:
                     f"Failed to process '{file_path.name}'", original_error=e
                 )
             )
+
+class BatchProcessor:
+    def __init__(self, pipeline: FilePipeline):
+        self.file_pipeline = pipeline
+        self.logger = logging.getLogger(__name__)
+
+    def process(self, file_paths: Iterable[Path]) -> BatchProcessingResult:
+        self.logger.info("Batch processing started.")
+
+        results: list[ProcessingResult] = []
+        for file_path in file_paths:
+            result = self.file_pipeline.process(file_path)
+            results.append(result)
+            
+        batch_result = BatchProcessingResult(results=results)
+
+        self.logger.info(
+            "Batch processing completed. Total=%d, Success=%d, Failure=%d",
+            batch_result.total_files,
+            batch_result.success_count,
+            batch_result.failure_count,
+        )
+
+        return batch_result

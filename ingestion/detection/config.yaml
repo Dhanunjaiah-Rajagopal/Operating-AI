@@ -1,0 +1,13 @@
+hash_algorithm: sha256
+
+extension_mime_mapping:
+  .jpg: image/jpeg
+  .jpeg: image/jpeg
+  .png: image/png
+  .pdf: application/pdf
+  .txt: text/plain
+  .docx: application/vnd.openxmlformats-officedocument.wordprocessingml.document
+  .doc: application/msword
+  .xls: application/vnd.ms-excel
+  .xlsx: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+  

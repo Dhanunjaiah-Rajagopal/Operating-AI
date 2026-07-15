@@ -40,3 +40,21 @@ class FileProcessingError(Exception):
 class ProcessingResult:
     file_profile: FileProfile | None
     error: FileProcessingError | None
+
+@dataclass(frozen=True)
+class BatchProcessingResult:
+    results: list[ProcessingResult]
+    @property
+    def total_files(self) -> int:
+        return len(self.results)
+    @property
+    def success_count(self) -> int:
+        return sum(1 for result in self.results if result.error is None)
+    @property
+    def failure_count(self) -> int:
+        return sum(1 for result in self.results if result.error is not None)
+
+@dataclass(frozen=True)
+class ApplicationConfig:
+    extension_mime_mapping: dict[str, str]
+    hash_algorithm: str
