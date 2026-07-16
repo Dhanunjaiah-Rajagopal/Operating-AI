@@ -5,7 +5,13 @@ from pathlib import Path
 
 import magic
 import yaml
-from ingestion.detection.models import ApplicationConfig, FileHash, Metadata, MimeType, ValidationStatus
+from ingestion.detection.models import (
+    ApplicationConfig,
+    FileHash,
+    Metadata,
+    MimeType,
+    ValidationStatus,
+)
 
 
 class MetadataExtractor:
@@ -16,30 +22,31 @@ class MetadataExtractor:
             extension=file_path.suffix,
             size=stats.st_size,
             created_time=datetime.fromtimestamp(stats.st_ctime, tz=timezone.utc),
-            modified_time=datetime.fromtimestamp(stats.st_mtime, tz=timezone.utc)
+            modified_time=datetime.fromtimestamp(stats.st_mtime, tz=timezone.utc),
         )
+
 
 class MimeDetector:
     def detect(self, file_path: Path) -> MimeType:
         mime_type = magic.from_file(str(file_path), mime=True)
         return MimeType(value=mime_type)
-    
+
+
 class HashGenerator:
     def __init__(self, algorithm: str):
         self.algorithm = algorithm
-        
+
         if not hasattr(hashlib, self.algorithm):
-            raise ValueError(
-                f"Unsupported hash algorithm: {self.algorithm}"
-            )
+            raise ValueError(f"Unsupported hash algorithm: {self.algorithm}")
 
     def generate(self, file_path: Path) -> FileHash:
         hasher = getattr(hashlib, self.algorithm)()
 
-        with open(file_path, 'rb') as f:
+        with open(file_path, "rb") as f:
             for chunk in iter(lambda: f.read(4096), b""):
                 hasher.update(chunk)
         return FileHash(algorithm=self.algorithm, value=hasher.hexdigest())
+
 
 class ExtensionValidator:
     def __init__(self, extension_mime_mapping: dict[str, str]):
@@ -51,8 +58,9 @@ class ExtensionValidator:
             return ValidationStatus.UNKNOWN
         if expected_mime == mime_type.value:
             return ValidationStatus.VALID
-        
+
         return ValidationStatus.SUSPICIOUS
+
 
 class ConfigurationLoader:
     def __init__(self, config_path: Path):
@@ -66,6 +74,7 @@ class ConfigurationLoader:
             extension_mime_mapping=data["extension_mime_mapping"],
             hash_algorithm=data["hash_algorithm"],
         )
+
 
 class ConfigurationProvider:
     def __init__(self, loader: ConfigurationLoader):
@@ -96,6 +105,4 @@ class ConfigurationProvider:
                 self.config = new_config
                 self.last_modified = current_modified
 
-                self.logger.info(
-                    "Configuration reloaded successfully."
-                )
+                self.logger.info("Configuration reloaded successfully.")

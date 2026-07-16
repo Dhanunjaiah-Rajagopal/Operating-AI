@@ -3,6 +3,8 @@ from pathlib import Path
 from typing import Iterable
 
 from ingestion.detection.components import (
+    ConfigurationLoader,
+    ConfigurationProvider,
     ExtensionValidator,
     HashGenerator,
     MetadataExtractor,
@@ -41,7 +43,9 @@ class FilePipeline:
             self.logger.info("MIME detected: %s", mime_type.value)
 
             file_hash = self.hash_generator.generate(file_path)
-            self.logger.info("Hash generated for '%s': %s", file_path.name, file_hash.algorithm)
+            self.logger.info(
+                "Hash generated for '%s': %s", file_path.name, file_hash.algorithm
+            )
 
             validation_status = self.extension_validator.validate(metadata, mime_type)
             self.logger.info(
@@ -70,8 +74,9 @@ class FilePipeline:
                 file_profile=None,
                 error=FileProcessingError(
                     f"Failed to process '{file_path.name}'", original_error=e
-                )
+                ),
             )
+
 
 class BatchProcessor:
     def __init__(self, pipeline: FilePipeline):
@@ -85,7 +90,7 @@ class BatchProcessor:
         for file_path in file_paths:
             result = self.file_pipeline.process(file_path)
             results.append(result)
-            
+
         batch_result = BatchProcessingResult(results=results)
 
         self.logger.info(
@@ -96,3 +101,20 @@ class BatchProcessor:
         )
 
         return batch_result
+
+
+def create_detection_pipeline() -> BatchProcessor:
+    config = ConfigurationProvider(
+        ConfigurationLoader(Path("ingestion") / "detection" / "config.yaml")
+    ).get_config()
+
+    pipeline = FilePipeline(
+        metadata_extractor=MetadataExtractor(),
+        mime_detector=MimeDetector(),
+        hash_generator=HashGenerator(algorithm=config.hash_algorithm),
+        extension_validator=ExtensionValidator(
+            extension_mime_mapping=config.extension_mime_mapping
+        ),
+    )
+
+    return BatchProcessor(pipeline=pipeline)
